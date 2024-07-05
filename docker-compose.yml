@@ -1,0 +1,55 @@
+services:
+  terra-postgres:
+    image: postgres:latest
+    container_name: postgres
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - terra_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: k@ycl0ck
+    networks:
+      - terra_keycloak_network
+
+  terra-keycloak:
+    build: .
+    container_name: keycloak
+    restart: always
+    ports:
+      - 8080:8080
+    command: 
+      - start-dev
+      - --spi-phone-default-service=aws
+      - --spi-message-sender-service-aws-sender=Terra
+      - --spi-phone-default-master-phone-default-region=US
+      - --spi-phone-default-source-hour-maximum=0
+      - --spi-phone-default-target-hour-maximum=0
+      - --hostname-strict=false
+      - --hostname-strict-https=false
+    environment:
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HEALTH_ENABLED: true
+      DB_VENDOR: postgres
+      DB_ADDR: postgres
+      DB_DATABASE: keycloak
+      DB_USER: keycloak
+      DB_PASSWORD: k@ycl0ck
+      DB_PORT: 5432
+      AWS_ACCESS_KEY_ID: 
+      AWS_SECRET_ACCESS_KEY: 
+      AWS_REGION: me-central-1
+    depends_on:
+      - terra-postgres
+    networks:
+      - terra_keycloak_network
+
+networks:
+  terra_keycloak_network:
+    driver: bridge
+
+volumes:
+  terra_postgres_data:
